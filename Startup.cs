@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using System;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,8 +27,11 @@ namespace TodoApi
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo {Title = "My API", Version = "v1"}); });
 
+            var connectionString = Environment.GetEnvironmentVariable("DB_CONNECTION_STRING") ??
+                                   Configuration.GetConnectionString("SqlServerConnectionString");
+            
             services.AddDbContext<TodoContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("SqlServerConnectionString")));
+                options.UseSqlServer(connectionString));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,10 +63,9 @@ namespace TodoApi
             using (var scope = app.ApplicationServices.CreateScope())
             {
                 var context = scope.ServiceProvider.GetService<TodoContext>();
-                
+
                 context.Database.Migrate();
             }
-
         }
     }
 }
